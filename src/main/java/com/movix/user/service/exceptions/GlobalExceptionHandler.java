@@ -11,7 +11,6 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.io.IOException;
@@ -27,30 +26,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                         .message(exception.getMessage())
                         .success(false)
                 .build());
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String,String>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        Map<String, String> response = new HashMap<String, String>();
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String message = error.getDefaultMessage();
-            response.put(fieldName, message);
-        });
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-
-    // This method will handle all the InvalidHttpRequests Exception
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<GenericApiResponse> handlerHttpRequestMethodNotSupportedException(
-            HttpRequestMethodNotSupportedException e) {
-
-        GenericApiResponse apiResponse = GenericApiResponse.builder()
-                .message(e.getMessage())
-                .success(false)
-                .build();
-
-        return new ResponseEntity<GenericApiResponse>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

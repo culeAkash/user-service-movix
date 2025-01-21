@@ -4,11 +4,9 @@ import com.movix.user.service.dto.UserDTO;
 import com.movix.user.service.requests.UserRegisterRequest;
 import com.movix.user.service.requests.UserUpdateRequest;
 import com.movix.user.service.responses.GenericApiResponse;
-import com.movix.user.service.services.BloomFilterService;
 import com.movix.user.service.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +17,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
     private UserService userService;
-    private BloomFilterService bloomFilterService;
     // Get requests
 
     @GetMapping("/createUser")
@@ -38,15 +35,6 @@ public class UserController {
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<UserDTO> userDTOs = this.userService.getAllUsers();
         return ResponseEntity.ok(userDTOs);
-    }
-
-    @GetMapping("/checkUsername")
-    public ResponseEntity<GenericApiResponse> checkUsername(@RequestParam("username") String username) {
-        boolean isValid = this.userService.validateUsername(username);
-        return ResponseEntity.ok(GenericApiResponse.builder()
-                        .message(isValid ? "Username is valid" : "Username is invalid")
-                        .success(isValid)
-                .build());
     }
 
     // Update user

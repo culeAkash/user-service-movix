@@ -21,6 +21,4 @@ public interface UserService {
 
     public void deleteUser(String userId);
 
-    public boolean validateUsername(String username);
-
 }

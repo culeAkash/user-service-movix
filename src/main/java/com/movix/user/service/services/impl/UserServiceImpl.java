@@ -9,14 +9,12 @@ import com.movix.user.service.exceptions.ResourceNotFoundException;
 import com.movix.user.service.repositories.UserRepository;
 import com.movix.user.service.requests.UserRegisterRequest;
 import com.movix.user.service.requests.UserUpdateRequest;
-import com.movix.user.service.services.BloomFilterService;
 import com.movix.user.service.services.UserService;
 import lombok.*;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,9 +33,6 @@ public class UserServiceImpl implements UserService {
     private PasswordEncoder passwordEncoder;
 
     Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
-
-
-    private BloomFilterService bloomFilterService;
 
 
     @Override
@@ -108,11 +103,6 @@ public class UserServiceImpl implements UserService {
             logger.error(e.getMessage());
             throw new GenericException("Failed to delete user with userId : " + userId, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    @Override
-    public boolean validateUsername(String username) {
-        return !this.bloomFilterService.getUserNameBloomFilter().contains(username);
     }
 
 
