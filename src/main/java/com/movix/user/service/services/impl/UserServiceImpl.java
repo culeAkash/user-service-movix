@@ -24,7 +24,7 @@ import java.util.List;
 @Getter
 @Data
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private UserRepository userRepository;
@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
 
     private PasswordEncoder passwordEncoder;
 
-    Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
 
     @Override
