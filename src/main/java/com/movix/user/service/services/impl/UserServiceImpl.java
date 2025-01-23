@@ -4,6 +4,7 @@ import com.movix.user.service.dto.UserDTO;
 import com.movix.user.service.entities.User;
 import com.movix.user.service.enums.Active;
 import com.movix.user.service.enums.Role;
+import com.movix.user.service.exceptions.DuplicateEntryException;
 import com.movix.user.service.exceptions.GenericException;
 import com.movix.user.service.exceptions.ResourceNotFoundException;
 import com.movix.user.service.repositories.UserRepository;
@@ -11,6 +12,7 @@ import com.movix.user.service.requests.UserRegisterRequest;
 import com.movix.user.service.requests.UserUpdateRequest;
 import com.movix.user.service.services.UserService;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,7 @@ import java.util.List;
 @Data
 @Service
 @AllArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private UserRepository userRepository;
@@ -36,8 +39,21 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public UserDTO createUser(UserRegisterRequest request) {
-        try {
+    public UserDTO createUser(UserRegisterRequest request) throws DuplicateEntryException {
+
+            // Not efficient has to be replaced with Bloom filter checking later
+            User existingUserByUsername = this.userRepository.findByUsername(request.getUsername()).orElse(null);
+            if (existingUserByUsername != null) {
+                throw new DuplicateEntryException("User", "username", request.getUsername());
+            }
+
+            // Not efficient has to be replaced with Bloom filter checking later
+            User existingUserByEmail = this.userRepository.findByUsername(request.getEmailId()).orElse(null);
+            if (existingUserByEmail != null) {
+                throw new DuplicateEntryException("User", "emailId", request.getEmailId());
+            }
+
+
             User toSaveUser = User.builder()
                     .username(request.getUsername())
                     .password(passwordEncoder.encode(request.getPassword()))
@@ -53,12 +69,8 @@ public class UserServiceImpl implements UserService {
 
             return this.modelMapper.map(savedUser, UserDTO.class);
         }
-        catch (Exception e) {
-            logger.error(e.getMessage());
-            throw new GenericException("Failed to create new user",HttpStatus.INTERNAL_SERVER_ERROR);
-        }
 
-    }
+
 
     @Override
     public UserDTO getUserById(String userId) {
@@ -111,3 +123,4 @@ public class UserServiceImpl implements UserService {
         return this.userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
     }
 }
+

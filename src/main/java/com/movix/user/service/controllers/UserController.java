@@ -1,6 +1,7 @@
 package com.movix.user.service.controllers;
 
 import com.movix.user.service.dto.UserDTO;
+import com.movix.user.service.exceptions.DuplicateEntryException;
 import com.movix.user.service.requests.UserRegisterRequest;
 import com.movix.user.service.requests.UserUpdateRequest;
 import com.movix.user.service.responses.GenericApiResponse;
@@ -23,8 +24,8 @@ public class UserController {
     private UserService userService;
     // Get requests
 
-    @GetMapping("/createUser")
-    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserRegisterRequest request) {
+    @PostMapping("/createUser")
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserRegisterRequest request) throws DuplicateEntryException {
         UserDTO savedUserDTO = this.userService.createUser(request);
         return ResponseEntity.ok(savedUserDTO);
     }

@@ -1,6 +1,7 @@
 package com.movix.user.service.services;
 
 import com.movix.user.service.dto.UserDTO;
+import com.movix.user.service.exceptions.DuplicateEntryException;
 import com.movix.user.service.requests.UserRegisterRequest;
 import com.movix.user.service.requests.UserUpdateRequest;
 
@@ -8,7 +9,7 @@ import java.util.List;
 
 public interface UserService {
 
-    public UserDTO createUser(UserRegisterRequest request);
+    public UserDTO createUser(UserRegisterRequest request) throws DuplicateEntryException;
 
     public UserDTO getUserById(String userId);
 
