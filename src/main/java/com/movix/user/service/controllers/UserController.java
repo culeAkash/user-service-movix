@@ -50,9 +50,12 @@ public class UserController {
         return ResponseEntity.ok(userDTO);
     }
 
+    // Delete User
     @DeleteMapping("deleteUser")
     public ResponseEntity<Void> deleteUser(@RequestParam("userId") String userId) {
         this.userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }
+
+    //TODO : Add controller to check username validation in real time
 }

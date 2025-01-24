@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
 
     private PasswordEncoder passwordEncoder;
 
-    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
 
 
     @Override
@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
             }
 
             // Not efficient has to be replaced with Bloom filter checking later
-            User existingUserByEmail = this.userRepository.findByUsername(request.getEmailId()).orElse(null);
+            User existingUserByEmail = this.userRepository.findByEmailId(request.getEmailId()).orElse(null);
             if (existingUserByEmail != null) {
                 throw new DuplicateEntryException("User", "emailId", request.getEmailId());
             }
@@ -91,30 +91,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO updateUser(UserUpdateRequest request) {
-        try {
-            User toUpdateUser = findUserById(request.getUserId());
 
-            this.modelMapper.map(request, toUpdateUser);
-            User updatedUser = this.userRepository.save(toUpdateUser);
+        User toUpdateUser = findUserById(request.getUserId());
 
-            return this.modelMapper.map(updatedUser, UserDTO.class);
-        }
-        catch (Exception e) {
-            logger.error(e.getMessage());
-            throw new GenericException("Failed to update user",HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        this.modelMapper.map(request, toUpdateUser);
+//        LOGGER.info("Updated user : {}", request.getLastName());
+        User updatedUser = this.userRepository.save(toUpdateUser);
+
+        return this.modelMapper.map(updatedUser, UserDTO.class);
     }
+
+
 
     @Override
     public void deleteUser(String userId) {
         User toDeleteUser = findUserById(userId);
-        try {
-            this.userRepository.delete(toDeleteUser);
-        }
-        catch (Exception e) {
-            logger.error(e.getMessage());
-            throw new GenericException("Failed to delete user with userId : " + userId, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        this.userRepository.delete(toDeleteUser);
     }
 
 

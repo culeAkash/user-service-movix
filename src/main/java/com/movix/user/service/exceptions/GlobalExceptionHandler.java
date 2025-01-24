@@ -2,27 +2,22 @@ package com.movix.user.service.exceptions;
 
 
 import com.movix.user.service.responses.ApiSubError;
-import com.movix.user.service.responses.GenericApiResponse;
 import com.movix.user.service.responses.GenericErrorResponse;
-import jakarta.el.MethodNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.NoHandlerFoundException;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -55,21 +50,23 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(GenericException.class)
-    public ResponseEntity<GenericApiResponse> handleGenericException(GenericException exception) {
-        return ResponseEntity.status(exception.getStatusCode()).body(GenericApiResponse.builder()
+    public ResponseEntity<GenericErrorResponse> handleGenericException(GenericException exception) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GenericErrorResponse.builder()
                         .message(exception.getMessage())
-                        .success(false)
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .timestamp(new Date())
                 .build());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<GenericApiResponse> notFoundException(ResourceNotFoundException exception) {
+    public ResponseEntity<GenericErrorResponse> notFoundException(ResourceNotFoundException exception) {
         String message = exception.getMessage();
-        GenericApiResponse apiResponse = GenericApiResponse.builder()
+        GenericErrorResponse errorResponse = GenericErrorResponse.builder()
                 .message(message)
-                .success(false)
+                .status(HttpStatus.NOT_FOUND)
+                .timestamp(new Date())
                 .build();
-        return new ResponseEntity<GenericApiResponse>(apiResponse, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<GenericErrorResponse>(errorResponse, errorResponse.getStatus());
     }
 
     @ExceptionHandler(DuplicateEntryException.class)
@@ -80,21 +77,53 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .build();
         return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+    }
 
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<GenericErrorResponse> httpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException exception) {
+        GenericErrorResponse errorResponse = GenericErrorResponse.builder()
+                .message(exception.getMessage())
+                .timestamp(new Date())
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .build();
+        return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<GenericErrorResponse> dataIntegrityViolationException(DataIntegrityViolationException exception) {
+        LOGGER.error(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GenericErrorResponse.builder()
+                .message(exception.getMessage())
+                .status(HttpStatus.BAD_REQUEST)
+                .timestamp(new Date())
+                .build()
+        );
     }
 
 
 
     @ExceptionHandler(IOException.class)
-    public ResponseEntity<GenericApiResponse> handlerIOException(IOException e) {
-        GenericApiResponse response = new GenericApiResponse(e.getMessage(), false);
-        return new ResponseEntity<GenericApiResponse>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<GenericErrorResponse> handlerIOException(IOException e) {
+        GenericErrorResponse response = new GenericErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,new Date(),e.getMessage(),null);
+        return new ResponseEntity<GenericErrorResponse>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(Exception.class)
-    public final ResponseEntity<?> handleAllException(Exception ex) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("error", ex.getMessage());
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    public final ResponseEntity<GenericErrorResponse> handleAllException(Exception ex) {
+        LOGGER.error(ex.getMessage());
+        GenericErrorResponse errorResponse = GenericErrorResponse.builder()
+                .message("Something went wrong!")
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .timestamp(new Date())
+                .subErrors(new ArrayList<>())
+                .build();
+//        Map<String, String> errors = new HashMap<>();
+//        errors.put("error", ex.getMessage());
+        errorResponse.getSubErrors().add(
+                ApiSubError.builder()
+                        .message(ex.getMessage())
+                        .build()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
